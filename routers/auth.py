@@ -90,6 +90,7 @@ def signup(
         password=bcrypt.hashpw(new_password.encode("UTF-8"), bcrypt.gensalt()),
         role_id=role.id,
         created_dt=datetime.now(),
+        is_active=True,
     )
 
     db.add(new_user)

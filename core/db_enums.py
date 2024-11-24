@@ -1,12 +1,12 @@
-from enum import Enum
+from enum import IntEnum
 
 
-class UserTMStatus(Enum):
+class UserTMStatus(IntEnum):
     ACTIVE = 1
     INACTIVE = 0
 
 
-class RoleTMRoleId(Enum):
+class RoleTMRoleId(IntEnum):
     OWNER = 1
     WAREHOUSE = 2
     ECOMMORCE = 3
