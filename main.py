@@ -57,6 +57,8 @@ def authjwt_exception_handler(request: Request, exc: AuthJWTException):
 # endregion
 
 
-@app.get(API_PREFIX + "/")
+@app.get(API_PREFIX + "/health-check")
 async def root():
-    return {"message": "Hello World"}
+    return JSONResponse(
+        content={"status": "OK", "message": "Service is healthy"}, status_code=200
+    )
