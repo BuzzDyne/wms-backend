@@ -1,17 +1,16 @@
 from enum import Enum
+import re
 
 
 class ErrCode(Enum):
-    AUT_SUP_001 = "Username '{}' already exists."
-    AUT_SUP_002 = "Role '{}' does not exist."
-    AUT_SUP_003 = "Username must start with a letter, be at least 3 characters long, and may only contain alphanumeric characters and dots."
-    AUT_SUP_004 = "Password must be at least 4 characters long."
-
-    AUT_SIN_001 = "Username does not exist."
-    AUT_SIN_002 = "Incorrect password."
-
-    AUT_REF_001 = "Username does not exist."
-    AUT_REF_002 = "User has been disabled."
+    AUT_SUP_E01 = "Username '{}' already exists (AUT_SUP_E01)"
+    AUT_SUP_E02 = "Role '{}' does not exist (AUT_SUP_E02)"
+    AUT_SUP_E03 = "Username must start with a letter, be at least 3 characters long, and may only contain alphanumeric characters and dots (AUT_SUP_E03)"
+    AUT_SUP_E04 = "Password must be at least 4 characters long (AUT_SUP_E04)"
+    AUT_SIN_E01 = "Username does not exist (AUT_SIN_E01)"
+    AUT_SIN_E02 = "Incorrect password (AUT_SIN_E02)"
+    AUT_REF_E01 = "Username does not exist (AUT_REF_E01)"
+    AUT_REF_E02 = "User has been disabled (AUT_REF_E02)"
 
     @classmethod
     def get(cls, code, *args) -> dict:
@@ -33,6 +32,6 @@ class ErrCode(Enum):
             raise ValueError(f"Invalid error code: {code}")
 
         return {
-            "errorCode": code.name,  # Get the enum member name (e.g., 'AUT_SUP_001')
-            "errorMsg": code.value.format(*args),  # Get the formatted message
+            "errorCode": code.name,
+            "errorMsg": code.value.format(*args),
         }

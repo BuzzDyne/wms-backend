@@ -17,12 +17,39 @@ ACCESS_TOKEN_EXP = timedelta(minutes=5)
 REFRESH_TOKEN_EXP = timedelta(days=7)
 
 
-@router.post("/signup")
+@router.post(
+    "/signup",
+    responses={
+        400: {
+            "description": "Bad Request - Multiple Error Scenarios",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "AUT_SUP_E01 - Username Exists": {
+                            "value": {"detail": ErrCode.get(ErrCode.AUT_SUP_E01, "()")},
+                        },
+                        "AUT_SUP_E02 - Role is not Exists": {
+                            "value": {"detail": ErrCode.get(ErrCode.AUT_SUP_E02, "()")},
+                        },
+                        "AUT_SUP_E03 - Username Invalid Format": {
+                            "value": {"detail": ErrCode.get(ErrCode.AUT_SUP_E03, "()")},
+                        },
+                        "AUT_SUP_E04 - Password Invalid Format": {
+                            "value": {"detail": ErrCode.get(ErrCode.AUT_SUP_E04, "()")},
+                        },
+                    }
+                }
+            },
+        }
+    },
+)
 def signup(
     payload: RegisterForm = Body(default=None),
     Authorize: AuthJWT = Depends(),
     db: Session = Depends(get_db),
 ):
+    # Authorize.jwt_required()
+
     new_username = payload.username.lower()
     new_password = payload.password
     new_rolename = payload.rolename.lower()
@@ -33,7 +60,7 @@ def signup(
     if user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ErrCode.get(ErrCode.AUT_SUP_001, new_username),
+            detail=ErrCode.get(ErrCode.AUT_SUP_E01, new_username),
         )
 
     # Check if rolename exists
@@ -42,19 +69,19 @@ def signup(
     if not role:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ErrCode.get(ErrCode.AUT_SUP_002, new_rolename),
+            detail=ErrCode.get(ErrCode.AUT_SUP_E02, new_rolename),
         )
 
     if not validate_username(new_username):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ErrCode.get(ErrCode.AUT_SUP_003),
+            detail=ErrCode.get(ErrCode.AUT_SUP_E03),
         )
 
     if not validate_password(new_password):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ErrCode.get(ErrCode.AUT_SUP_004),
+            detail=ErrCode.get(ErrCode.AUT_SUP_E04),
         )
 
     # Add user to DB
@@ -72,7 +99,26 @@ def signup(
     return {"msg": f"Created user '{new_username}'"}
 
 
-@router.post("/login")
+@router.post(
+    "/login",
+    responses={
+        400: {
+            "description": "Bad Request - Multiple Error Scenarios",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "AUT_SIN_E01 - Username not exists": {
+                            "value": {"detail": ErrCode.get(ErrCode.AUT_SIN_E01, "()")},
+                        },
+                        "AUT_SIN_E02 - Incorrect password": {
+                            "value": {"detail": ErrCode.get(ErrCode.AUT_SIN_E02, "()")},
+                        },
+                    }
+                }
+            },
+        }
+    },
+)
 def login(
     payload: LoginForm, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)
 ):
@@ -88,7 +134,7 @@ def login(
     if not user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ErrCode.get(ErrCode.AUT_SIN_001),
+            detail=ErrCode.get(ErrCode.AUT_SIN_E01),
         )
 
     db_pw = (
@@ -100,7 +146,7 @@ def login(
     if not bcrypt.checkpw(payload.password.encode("utf-8"), db_pw):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ErrCode.get(ErrCode.AUT_SIN_002),
+            detail=ErrCode.get(ErrCode.AUT_SIN_E02),
         )
 
     token_payload = {"role_id": user.role_id, "user_id": user.id}
@@ -119,7 +165,26 @@ def login(
     return {"access_token": access_token, "refresh_token": refresh_token}
 
 
-@router.get("/refresh")
+@router.get(
+    "/refresh",
+    responses={
+        400: {
+            "description": "Bad Request - Multiple Error Scenarios",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "AUT_REF_E01 - Username not exists": {
+                            "value": {"detail": ErrCode.get(ErrCode.AUT_REF_E01, "()")},
+                        },
+                        "AUT_REF_E02 - User disabled": {
+                            "value": {"detail": ErrCode.get(ErrCode.AUT_REF_E02, "()")},
+                        },
+                    }
+                }
+            },
+        }
+    },
+)
 def refresh(Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     Authorize.jwt_refresh_token_required()
 
@@ -130,13 +195,13 @@ def refresh(Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=ErrCode.get(ErrCode.AUT_REF_001),
+            detail=ErrCode.get(ErrCode.AUT_REF_E01),
         )
 
     if user.is_active == UserTMStatus.INACTIVE:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=ErrCode.get(ErrCode.AUT_REF_002),
+            detail=ErrCode.get(ErrCode.AUT_REF_E02),
         )
 
     new_access_token = Authorize.create_access_token(
