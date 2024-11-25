@@ -125,14 +125,9 @@ def login(
 ):
     input_username = payload.username.lower()
 
-    user = (
-        db.query(User_TM)
-        .filter(User_TM.username == input_username)
-        .filter(User_TM.is_active == UserTMStatus.ACTIVE)
-        .first()
-    )
+    user = db.query(User_TM).filter(User_TM.username == input_username).first()
 
-    if not user:
+    if not user or user.is_active != UserTMStatus.ACTIVE:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=ErrCode.get(ErrCode.AUT_SIN_E01),
