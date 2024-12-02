@@ -12,6 +12,10 @@ class ErrCode(Enum):
     AUT_REF_E01 = "Username does not exist (AUT_REF_E01)"
     AUT_REF_E02 = "User has been disabled (AUT_REF_E02)"
 
+    PIC_NEW_E01 = "A draft picklist already exists"
+    PIC_UPL_E01 = "Invalid e-commerce code: {}. Supported codes are {}"
+    PIC_UPL_E02 = "Invalid header for '{}' in file for '{}'. Expected: '{}' at index {}, Got: '{}'"
+
     @classmethod
     def get(cls, code, *args) -> dict:
         """

@@ -15,6 +15,10 @@ Base.prepare(engine, reflect=True)
 
 User_TM = Base.classes.user_tm
 Role_TM = Base.classes.role_tm
+Picklist_TM = Base.classes.picklist_tm
+PicklistFile_TR = Base.classes.picklistfile_tr
+PicklistItem_TR = Base.classes.picklistitem_tr
+ProductMapping_TR = Base.classes.productmapping_tr
 
 
 def get_db():
