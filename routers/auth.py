@@ -7,7 +7,7 @@ import bcrypt
 
 from database import get_db, User_TM, Role_TM
 from schemas import LoginForm, RegisterForm
-from core.error_codes import ErrCode
+from core.error_codes import ErrCode as E
 from core.utils import validate_username, validate_password
 from core.db_enums import UserTMStatus
 
@@ -26,16 +26,16 @@ REFRESH_TOKEN_EXP = timedelta(days=7)
                 "application/json": {
                     "examples": {
                         "AUT_SUP_E01 - Username Exists": {
-                            "value": {"detail": ErrCode.get(ErrCode.AUT_SUP_E01, "()")},
+                            "value": {"detail": E.format_error(E.AUT_SUP_E01, "()")},
                         },
                         "AUT_SUP_E02 - Role is not Exists": {
-                            "value": {"detail": ErrCode.get(ErrCode.AUT_SUP_E02, "()")},
+                            "value": {"detail": E.format_error(E.AUT_SUP_E02, "()")},
                         },
                         "AUT_SUP_E03 - Username Invalid Format": {
-                            "value": {"detail": ErrCode.get(ErrCode.AUT_SUP_E03, "()")},
+                            "value": {"detail": E.format_error(E.AUT_SUP_E03, "()")},
                         },
                         "AUT_SUP_E04 - Password Invalid Format": {
-                            "value": {"detail": ErrCode.get(ErrCode.AUT_SUP_E04, "()")},
+                            "value": {"detail": E.format_error(E.AUT_SUP_E04, "()")},
                         },
                     }
                 }
@@ -60,7 +60,7 @@ def signup(
     if user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ErrCode.get(ErrCode.AUT_SUP_E01, new_username),
+            detail=E.format_error(E.AUT_SUP_E01, new_username),
         )
 
     # Check if rolename exists
@@ -69,19 +69,19 @@ def signup(
     if not role:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ErrCode.get(ErrCode.AUT_SUP_E02, new_rolename),
+            detail=E.format_error(E.AUT_SUP_E02, new_rolename),
         )
 
     if not validate_username(new_username):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ErrCode.get(ErrCode.AUT_SUP_E03),
+            detail=E.format_error(E.AUT_SUP_E03),
         )
 
     if not validate_password(new_password):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ErrCode.get(ErrCode.AUT_SUP_E04),
+            detail=E.format_error(E.AUT_SUP_E04),
         )
 
     # Add user to DB
@@ -109,10 +109,10 @@ def signup(
                 "application/json": {
                     "examples": {
                         "AUT_SIN_E01 - Username not exists": {
-                            "value": {"detail": ErrCode.get(ErrCode.AUT_SIN_E01, "()")},
+                            "value": {"detail": E.format_error(E.AUT_SIN_E01, "()")},
                         },
                         "AUT_SIN_E02 - Incorrect password": {
-                            "value": {"detail": ErrCode.get(ErrCode.AUT_SIN_E02, "()")},
+                            "value": {"detail": E.format_error(E.AUT_SIN_E02, "()")},
                         },
                     }
                 }
@@ -130,7 +130,7 @@ def login(
     if not user or user.is_active != UserTMStatus.ACTIVE:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ErrCode.get(ErrCode.AUT_SIN_E01),
+            detail=E.format_error(E.AUT_SIN_E01),
         )
 
     db_pw = (
@@ -142,7 +142,7 @@ def login(
     if not bcrypt.checkpw(payload.password.encode("utf-8"), db_pw):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ErrCode.get(ErrCode.AUT_SIN_E02),
+            detail=E.format_error(E.AUT_SIN_E02),
         )
 
     token_payload = {"role_id": user.role_id, "user_id": user.id}
@@ -170,10 +170,10 @@ def login(
                 "application/json": {
                     "examples": {
                         "AUT_REF_E01 - Username not exists": {
-                            "value": {"detail": ErrCode.get(ErrCode.AUT_REF_E01, "()")},
+                            "value": {"detail": E.format_error(E.AUT_REF_E01, "()")},
                         },
                         "AUT_REF_E02 - User disabled": {
-                            "value": {"detail": ErrCode.get(ErrCode.AUT_REF_E02, "()")},
+                            "value": {"detail": E.format_error(E.AUT_REF_E02, "()")},
                         },
                     }
                 }
@@ -191,13 +191,13 @@ def refresh(Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=ErrCode.get(ErrCode.AUT_REF_E01),
+            detail=E.format_error(E.AUT_REF_E01),
         )
 
     if user.is_active == UserTMStatus.INACTIVE:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=ErrCode.get(ErrCode.AUT_REF_E02),
+            detail=E.format_error(E.AUT_REF_E02),
         )
 
     new_access_token = Authorize.create_access_token(

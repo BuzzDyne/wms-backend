@@ -1,5 +1,4 @@
 from enum import Enum
-import re
 
 
 class ErrCode(Enum):
@@ -12,12 +11,13 @@ class ErrCode(Enum):
     AUT_REF_E01 = "Username does not exist (AUT_REF_E01)"
     AUT_REF_E02 = "User has been disabled (AUT_REF_E02)"
 
-    PIC_NEW_E01 = "A draft picklist already exists"
-    PIC_UPL_E01 = "Invalid e-commerce code: {}. Supported codes are {}"
-    PIC_UPL_E02 = "Invalid header for '{}' in file for '{}'. Expected: '{}' at index {}, Got: '{}'"
+    PIC_NEW_E01 = "A draft picklist already exists (PIC_NEW_E01)"
+    PIC_UPL_E01 = "Invalid e-commerce code: {}. Supported codes are {} (PIC_UPL_E01)"
+    PIC_UPL_E02 = "Invalid header for '{}' in file for '{}'. Expected: '{}' at index {}, Got: '{}' (PIC_UPL_E02)"
+    PIC_UPD_E01 = "Picklist not found (PIC_UPD_E01)"
 
     @classmethod
-    def get(cls, code, *args) -> dict:
+    def format_error(cls, code, *args) -> dict:
         """
         Fetches the error message by code and formats it if needed.
 

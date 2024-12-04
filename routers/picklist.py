@@ -11,7 +11,7 @@ from database import (
     Picklist_TM,
 )
 from constant import XLS_FILE_FORMAT, PicklistStatus
-from core.error_codes import ErrCode
+from core.error_codes import ErrCode as E
 from core.utils import validate_picklist_file, extract_picklist_item
 from io import BytesIO
 
@@ -36,7 +36,7 @@ def create_picklist(
     if picklist:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ErrCode.get(ErrCode.PIC_NEW_E01),
+            detail=E.format_error(E.PIC_NEW_E01),
         )
 
     # Add picklist to DB
@@ -51,6 +51,29 @@ def create_picklist(
     db.refresh(new_picklist)
 
     return {"msg": f"Successfully created picklist!", "data": new_picklist}
+
+
+@router.get("/{id}/update/cancel-draft")
+async def cancel_draft(
+    picklist_id: int,
+    Authorize: AuthJWT = Depends(),
+    db: Session = Depends(get_db),
+):
+    db_picklist = get_picklist(picklist_id, E.format_error(E.PIC_UPD_E01), db)
+
+    # Validation
+    print("")
+
+    return {}
+
+
+def get_picklist(id: int, err_msg: str, db: Session):
+    query = db.query(Picklist_TM).filter(Picklist_TM.id == id).first()
+
+    if not query:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=err_msg)
+
+    return query
 
 
 @router.post("/{picklist_id}/upload/{ecom_code}")

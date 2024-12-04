@@ -2,7 +2,7 @@ import re
 from constant import XLS
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
-from core.error_codes import ErrCode
+from core.error_codes import ErrCode as E
 
 
 def validate_username(username: str) -> bool:
@@ -59,7 +59,7 @@ def validate_picklist_file(workbook, ecom_code):
     if ecom_code not in XLS:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ErrCode.get(ErrCode.PIC_UPL_E01, ecom_code, list(XLS.keys())),
+            detail=E.format_error(E.PIC_UPL_E01, ecom_code, list(XLS.keys())),
         )
 
     config = XLS[ecom_code]
@@ -87,8 +87,8 @@ def validate_picklist_file(workbook, ecom_code):
         ):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=ErrCode.get(
-                    ErrCode.PIC_UPL_E02,
+                detail=E.format_error(
+                    E.PIC_UPL_E02,
                     field_name,
                     ecom_code,
                     expected_header,

@@ -54,3 +54,16 @@ class PicklistStatus:
     CREATED = "CREATED"
     ON_PICKING = "ON_PICKING"
     COMPLETED = "COMPLETED"
+    VALID_STATUS_CHANGES = {"CANCELLED", "CREATED", "ON_PICKING", "COMPLETED"}
+
+
+class AuditLog:
+    class Menu:
+        PICKLIST = "PICKLIST"
+
+    class Action:
+        PICKLIST_CREATION = "PICKLIST_CREATION"
+        PICKLIST_UPDATE = "PICKLIST_UPDATE"
+
+    class Entity:
+        PICKLIST_TM = "PICKLIST_TM"
