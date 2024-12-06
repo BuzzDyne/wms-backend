@@ -10,8 +10,14 @@ from database import (
     ProductMapping_TR,
     Picklist_TM,
 )
-from constant import XLS_FILE_FORMAT, PicklistStatus
+from constant import XLS_FILE_FORMAT
 from core.error_codes import ErrCode as E
+from core.db_enums import PicklistTMStatus
+from core.db_utils import (
+    get_picklist_by_id,
+    set_picklist_status,
+    get_picklistitems_by_picklist_id,
+)
 from core.utils import validate_picklist_file, extract_picklist_item
 from io import BytesIO
 
@@ -29,7 +35,7 @@ def create_picklist(
     # Check if on draft picklist exists
     picklist = (
         db.query(Picklist_TM)
-        .filter(Picklist_TM.picklist_status == PicklistStatus.ON_DRAFT)
+        .filter(Picklist_TM.picklist_status == PicklistTMStatus.ON_DRAFT)
         .all()
     )
 
@@ -42,38 +48,100 @@ def create_picklist(
     # Add picklist to DB
     new_picklist = Picklist_TM(
         draft_create_dt=datetime.now(),
-        picklist_status=PicklistStatus.ON_DRAFT,
-        creator_id=user_id,
+        picklist_status=PicklistTMStatus.ON_DRAFT,
     )
 
     db.add(new_picklist)
     db.commit()
     db.refresh(new_picklist)
 
+    # TODO Logging
+
     return {"msg": f"Successfully created picklist!", "data": new_picklist}
 
 
-@router.get("/{id}/update/cancel-draft")
+@router.post("/{picklist_id}/update/cancel-draft")
 async def cancel_draft(
     picklist_id: int,
     Authorize: AuthJWT = Depends(),
     db: Session = Depends(get_db),
 ):
-    db_picklist = get_picklist(picklist_id, E.format_error(E.PIC_UPD_E01), db)
+    Authorize.jwt_required()
+    user_id = Authorize.get_raw_jwt()["user_id"]
+
+    db_picklist = get_picklist_by_id(db, picklist_id)
+
+    if not db_picklist:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=E.format_error(E.PIC_CCL_E01),
+        )
 
     # Validation
-    print("")
+    if db_picklist.picklist_status != PicklistTMStatus.ON_DRAFT:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=E.format_error(
+                E.PIC_CCL_E02, db_picklist.picklist_status, PicklistTMStatus.ON_DRAFT
+            ),
+        )
 
-    return {}
+    # Set Status
+    set_picklist_status(db, db_picklist, PicklistTMStatus.CANCELLED)
+
+    # TODO Logging
+
+    return {"msg": "Cancel successful"}
 
 
-def get_picklist(id: int, err_msg: str, db: Session):
-    query = db.query(Picklist_TM).filter(Picklist_TM.id == id).first()
+@router.post("/{picklist_id}/update/finish-draft")
+async def finish_draft(
+    picklist_id: int,
+    Authorize: AuthJWT = Depends(),
+    db: Session = Depends(get_db),
+):
+    Authorize.jwt_required()
+    user_id = Authorize.get_raw_jwt()["user_id"]
 
-    if not query:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=err_msg)
+    db_picklist = get_picklist_by_id(db, picklist_id)
 
-    return query
+    if not db_picklist:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=E.format_error(E.PIC_FIN_E01),
+        )
+
+    # Validation
+    if db_picklist.picklist_status != PicklistTMStatus.ON_DRAFT:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=E.format_error(
+                E.PIC_FIN_E02, db_picklist.picklist_status, PicklistTMStatus.ON_DRAFT
+            ),
+        )
+
+    items_arr = get_picklistitems_by_picklist_id(db, db_picklist.id)
+
+    if not items_arr:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=E.format_error(E.PIC_FIN_E03),
+        )
+
+    # Check if all picklistitem has stock_id
+    for item in items_arr:
+        if item.stock_id is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=E.format_error(E.PIC_FIN_E04),
+            )
+
+    # Set Status
+    set_picklist_status(db, db_picklist, PicklistTMStatus.CREATED)
+
+    # TODO Logging
+
+    return {"msg": "Finished Draft successful"}
 
 
 @router.post("/{picklist_id}/upload/{ecom_code}")

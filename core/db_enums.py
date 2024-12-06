@@ -1,4 +1,4 @@
-from enum import IntEnum
+from enum import IntEnum, StrEnum
 
 
 class UserTMStatus(IntEnum):
@@ -11,3 +11,23 @@ class RoleTMRoleId(IntEnum):
     WAREHOUSE = 2
     ECOMMORCE = 3
     PACKER = 4
+
+
+class PicklistTMStatus(StrEnum):
+    ON_DRAFT = "ON_DRAFT"
+    CANCELLED = "CANCELLED"
+    CREATED = "CREATED"
+    ON_PICKING = "ON_PICKING"
+    COMPLETED = "COMPLETED"
+
+
+class AuditLog:
+    class Menu(StrEnum):
+        PICKLIST = "PICKLIST"
+
+    class Action(StrEnum):
+        PICKLIST_CREATION = "PICKLIST_CREATION"
+        PICKLIST_UPDATE = "PICKLIST_UPDATE"
+
+    class Entity(StrEnum):
+        PICKLIST_TM = "PICKLIST_TM"

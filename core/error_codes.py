@@ -14,7 +14,12 @@ class ErrCode(Enum):
     PIC_NEW_E01 = "A draft picklist already exists (PIC_NEW_E01)"
     PIC_UPL_E01 = "Invalid e-commerce code: {}. Supported codes are {} (PIC_UPL_E01)"
     PIC_UPL_E02 = "Invalid header for '{}' in file for '{}'. Expected: '{}' at index {}, Got: '{}' (PIC_UPL_E02)"
-    PIC_UPD_E01 = "Picklist not found (PIC_UPD_E01)"
+    PIC_CCL_E01 = "Picklist not found (PIC_CCL_E01)"
+    PIC_CCL_E02 = "Picklist status is '{}'. Expected: '{}' (PIC_CCL_E02)"
+    PIC_FIN_E01 = "Picklist not found (PIC_FIN_E01)"
+    PIC_FIN_E02 = "Picklist status is '{}'. Expected: '{}' (PIC_FIN_E02)"
+    PIC_FIN_E03 = "Picklist doesn't have any items (PIC_FIN_E03)"
+    PIC_FIN_E04 = "Picklist still has item(s) unmapped StockID (PIC_FIN_E04)"
 
     @classmethod
     def format_error(cls, code, *args) -> dict:
