@@ -24,3 +24,7 @@ class RegisterForm(BaseModel):
     username: str
     password: str
     rolename: str
+
+
+class RepeatItemMappingRequest(BaseModel):
+    mapped_picklistitem_id: Optional[int]

@@ -1,7 +1,14 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
-from core.db_enums import PicklistTMStatus
-from database import Picklist_TM, PicklistItem_TR, Stock_TM
+from core.db_enums import PicklistTMStatus, StockTMIsActive
+from database import (
+    Picklist_TM,
+    PicklistItem_TR,
+    Stock_TM,
+    StockType_TR,
+    StockSize_TR,
+    StockColor_TR,
+)
 
 from datetime import datetime
 
@@ -46,10 +53,81 @@ def get_picklistitems_by_picklist_id(db: Session, picklist_id: int):
     )
 
 
+def get_picklistitem_by_picklistitem_id(db: Session, picklistitem_id: int):
+    return (
+        db.query(PicklistItem_TR).filter(PicklistItem_TR.id == picklistitem_id).first()
+    )
+
+
+def copy_stock_id_by_picklistitem_object(db: Session, picklistitem: PicklistItem_TR):
+    matching_items = (
+        db.query(PicklistItem_TR)
+        .filter(
+            PicklistItem_TR.ecom_code == picklistitem.ecom_code,
+            PicklistItem_TR.field1 == picklistitem.field1,
+            PicklistItem_TR.field2 == picklistitem.field2,
+            PicklistItem_TR.field3 == picklistitem.field3,
+            PicklistItem_TR.field4 == picklistitem.field4,
+            PicklistItem_TR.field5 == picklistitem.field5,
+            PicklistItem_TR.picklist_id == picklistitem.picklist_id,
+            PicklistItem_TR.id != picklistitem.id,
+        )
+        .all()
+    )
+
+    # Update the stock_id for all matching items
+    for item in matching_items:
+        item.stock_id = picklistitem.stock_id
+
+    # Commit the changes to the database
+    db.commit()
+
+    return matching_items
+
+
 # endregion
 
 
 # region StockTM
+def get_stocks(db: Session):
+    results = (
+        db.query(
+            Stock_TM.id.label("stock_id"),
+            Stock_TM.stock_type_id,
+            StockType_TR.type_name,
+            Stock_TM.stock_size_id,
+            StockSize_TR.size_name,
+            Stock_TM.stock_color_id,
+            StockColor_TR.color_name,
+            Stock_TM.quantity.label("quantity"),
+            Stock_TM.is_active.label("is_active"),
+        )
+        .join(StockType_TR, Stock_TM.stock_type_id == StockType_TR.id)
+        .join(StockSize_TR, Stock_TM.stock_size_id == StockSize_TR.id)
+        .join(StockColor_TR, Stock_TM.stock_color_id == StockColor_TR.id)
+        .filter(Stock_TM.is_active == StockTMIsActive.ACTIVE)
+        .all()
+    )
+
+    # Convert result to list of dictionaries
+    stocks = []
+    for result in results:
+        stock = {
+            "stock_id": result.stock_id,
+            "stock_type_id": result.stock_type_id,
+            "type_name": result.type_name,
+            "stock_size_id": result.stock_size_id,
+            "size_name": result.size_name,
+            "stock_color_id": result.stock_color_id,
+            "color_name": result.color_name,
+            "quantity": result.quantity,
+            "is_active": result.is_active,
+        }
+        stocks.append(stock)
+
+    return stocks
+
+
 def get_stock_by_stock_id(db: Session, stock_id: int):
     return db.query(Stock_TM).filter(Stock_TM.id == stock_id).first()
 

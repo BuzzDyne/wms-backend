@@ -16,6 +16,8 @@ class ErrCode(Enum):
     PIC_UPL_E02 = "Invalid header for '{}' in file for '{}'. Expected: '{}' at index {}, Got: '{}' (PIC_UPL_E02)"
     PIC_CCL_E01 = "Picklist not found (PIC_CCL_E01)"
     PIC_CCL_E02 = "Picklist status is '{}'. Expected: '{}' (PIC_CCL_E02)"
+    PIC_REM_E01 = "Picklist not found (PIC_REM_E01)"
+    PIC_REM_E02 = "Given PicklistItem (ID:{}) belongs to Picklist (ID:{}). Expected Picklist (ID:{}) (PIC_REM_E02)"
     PIC_FIN_E01 = "Picklist not found (PIC_FIN_E01)"
     PIC_FIN_E02 = "Picklist status is '{}'. Expected: '{}' (PIC_FIN_E02)"
     PIC_FIN_E03 = "Picklist doesn't have any items (PIC_FIN_E03)"

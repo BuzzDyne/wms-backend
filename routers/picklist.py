@@ -10,6 +10,7 @@ from database import (
     ProductMapping_TR,
     Picklist_TM,
 )
+from schemas import RepeatItemMappingRequest
 from constant import XLS_FILE_FORMAT
 from core.error_codes import ErrCode as E
 from core.db_enums import PicklistTMStatus, PicklistItemTRIsExcluded
@@ -18,6 +19,8 @@ from core.db_utils import (
     set_picklist_status,
     get_picklistitems_by_picklist_id,
     update_stock_quantity_by_stock_id,
+    get_picklistitem_by_picklistitem_id,
+    copy_stock_id_by_picklistitem_object,
 )
 from core.utils import validate_picklist_file, extract_picklist_item
 from io import BytesIO
@@ -144,6 +147,47 @@ async def finish_draft(
     # TODO Logging
 
     return {"msg": "Finished Draft successful"}
+
+
+@router.post("/{picklist_id}/repeat-item-mapping")
+async def repeat_item_mapping(
+    picklist_id: int,
+    data: RepeatItemMappingRequest,
+    Authorize: AuthJWT = Depends(),
+    db: Session = Depends(get_db),
+):
+    Authorize.jwt_required()
+
+    db_picklist = get_picklist_by_id(db, picklist_id)
+
+    if not db_picklist:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=E.format_error(E.PIC_REM_E01),
+        )
+
+    # If mapped item id given, copy from that
+    if data.mapped_picklistitem_id:
+        item = get_picklistitem_by_picklistitem_id(db, data.mapped_picklistitem_id)
+        print()
+
+        if item.picklist_id != picklist_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=E.format_error(
+                    E.PIC_REM_E02,
+                    data.mapped_picklistitem_id,
+                    item.picklist_id,
+                    picklist_id,
+                ),
+            )
+
+        copy_stock_id_by_picklistitem_object(db, item)
+    else:  # check item against all mapping
+        # TODO
+        return
+
+    return
 
 
 @router.post("/{picklist_id}/update/on-picking")

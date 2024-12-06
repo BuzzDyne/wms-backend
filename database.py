@@ -20,6 +20,9 @@ PicklistFile_TR = Base.classes.picklistfile_tr
 PicklistItem_TR = Base.classes.picklistitem_tr
 ProductMapping_TR = Base.classes.productmapping_tr
 Stock_TM = Base.classes.stock_tm
+StockType_TR = Base.classes.stocktype_tr
+StockSize_TR = Base.classes.stocksize_tr
+StockColor_TR = Base.classes.stockcolor_tr
 
 
 def get_db():

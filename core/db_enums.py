@@ -13,6 +13,11 @@ class RoleTMRoleId(IntEnum):
     PACKER = 4
 
 
+class StockTMIsActive(IntEnum):
+    ACTIVE = 1
+    INACTIVE = 0
+
+
 class PicklistTMStatus(StrEnum):
     ON_DRAFT = "ON_DRAFT"
     CANCELLED = "CANCELLED"
