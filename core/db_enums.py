@@ -21,6 +21,11 @@ class PicklistTMStatus(StrEnum):
     COMPLETED = "COMPLETED"
 
 
+class PicklistItemTRIsExcluded(IntEnum):
+    INCLUDED = 0
+    EXCLUDED = 1
+
+
 class AuditLog:
     class Menu(StrEnum):
         PICKLIST = "PICKLIST"

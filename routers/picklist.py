@@ -12,11 +12,12 @@ from database import (
 )
 from constant import XLS_FILE_FORMAT
 from core.error_codes import ErrCode as E
-from core.db_enums import PicklistTMStatus
+from core.db_enums import PicklistTMStatus, PicklistItemTRIsExcluded
 from core.db_utils import (
     get_picklist_by_id,
     set_picklist_status,
     get_picklistitems_by_picklist_id,
+    update_stock_quantity_by_stock_id,
 )
 from core.utils import validate_picklist_file, extract_picklist_item
 from io import BytesIO
@@ -60,7 +61,7 @@ def create_picklist(
     return {"msg": f"Successfully created picklist!", "data": new_picklist}
 
 
-@router.post("/{picklist_id}/update/cancel-draft")
+@router.post("/{picklist_id}/update/cancelled")
 async def cancel_draft(
     picklist_id: int,
     Authorize: AuthJWT = Depends(),
@@ -94,7 +95,7 @@ async def cancel_draft(
     return {"msg": "Cancel successful"}
 
 
-@router.post("/{picklist_id}/update/finish-draft")
+@router.post("/{picklist_id}/update/created")
 async def finish_draft(
     picklist_id: int,
     Authorize: AuthJWT = Depends(),
@@ -139,9 +140,92 @@ async def finish_draft(
     # Set Status
     set_picklist_status(db, db_picklist, PicklistTMStatus.CREATED)
 
+    # TODO Use Returned Items Flow
     # TODO Logging
 
     return {"msg": "Finished Draft successful"}
+
+
+@router.post("/{picklist_id}/update/on-picking")
+async def set_on_picking(
+    picklist_id: int,
+    Authorize: AuthJWT = Depends(),
+    db: Session = Depends(get_db),
+):
+    Authorize.jwt_required()
+    user_id = Authorize.get_raw_jwt()["user_id"]
+
+    db_picklist = get_picklist_by_id(db, picklist_id)
+
+    if not db_picklist:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=E.format_error(E.PIC_OPI_E01),
+        )
+
+    # Validation
+    if db_picklist.picklist_status != PicklistTMStatus.CREATED:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=E.format_error(
+                E.PIC_OPI_E02, db_picklist.picklist_status, PicklistTMStatus.CREATED
+            ),
+        )
+
+    # Set Status
+    set_picklist_status(db, db_picklist, PicklistTMStatus.ON_PICKING)
+
+    # TODO Use Returned Items Flow
+    # TODO Logging
+
+    return {"msg": "Draft set to OnPicking successfully"}
+
+
+@router.post("/{picklist_id}/update/complete-draft")
+async def complete_draft(
+    picklist_id: int,
+    Authorize: AuthJWT = Depends(),
+    db: Session = Depends(get_db),
+):
+    Authorize.jwt_required()
+    user_id = Authorize.get_raw_jwt()["user_id"]
+
+    db_picklist = get_picklist_by_id(db, picklist_id)
+
+    if not db_picklist:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=E.format_error(E.PIC_OPI_E01),
+        )
+
+    # Validation
+    if db_picklist.picklist_status != PicklistTMStatus.ON_PICKING:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=E.format_error(
+                E.PIC_FIN_E02, db_picklist.picklist_status, PicklistTMStatus.ON_PICKING
+            ),
+        )
+
+    # Reduce Stock Quantity based on Picklist Item
+    items_arr = get_picklistitems_by_picklist_id(db, db_picklist.id)
+    stock_updates = {}
+
+    # Group items by stock_id and count how many times each stock_id appears
+    for item in items_arr:
+        if item.is_excluded == PicklistItemTRIsExcluded.INCLUDED:
+            stock_updates[item.stock_id] = stock_updates.get(item.stock_id, 0) + 1
+
+    # Update stock quantities in bulk
+    for stock_id, count in stock_updates.items():
+        update_stock_quantity_by_stock_id(db, stock_id, count)
+
+    # Set Status
+    set_picklist_status(db, db_picklist, PicklistTMStatus.COMPLETED)
+
+    # TODO Logging
+
+    return {"msg": "Picklist completed successfully"}
 
 
 @router.post("/{picklist_id}/upload/{ecom_code}")
