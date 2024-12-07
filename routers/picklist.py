@@ -21,6 +21,7 @@ from core.db_utils import (
     update_stock_quantity_by_stock_id,
     get_picklistitem_by_picklistitem_id,
     copy_stock_id_by_picklistitem_object,
+    get_all_product_mapping,
 )
 from core.utils import validate_picklist_file, extract_picklist_item
 from io import BytesIO
@@ -183,11 +184,36 @@ async def repeat_item_mapping(
             )
 
         copy_stock_id_by_picklistitem_object(db, item)
-    else:  # check item against all mapping
-        # TODO
-        return
 
-    return
+        return {
+            "msg": f"Successfully applied stock mapping from picklistitem id ({data.mapped_picklistitem_id}) to other similar picklistitem under the same picklist id!",
+        }
+    else:  # check item against all mapping
+        # Get All Items which belong to this PicklistID
+        items = get_picklistitems_by_picklist_id(db, picklist_id)
+
+        # Get all mappings
+        mappings = get_all_product_mapping(db)
+
+        # Create a lookup dictionary for stock_id
+        mapping_lookup = {
+            (row.field1, row.field2, row.field3, row.field4, row.field5): row.stock_id
+            for row in mappings
+        }
+
+        for item in items:
+            stock_key = (
+                item.field1,
+                item.field2,
+                item.field3,
+                item.field4,
+                item.field5,
+            )
+            item.stock_id = mapping_lookup.get(stock_key)
+
+        db.commit()
+
+        return {"msg": "Successfully processed Picklist File!", "data": items}
 
 
 @router.post("/{picklist_id}/update/on-picking")
@@ -291,7 +317,7 @@ async def upload(
     workbook = load_workbook(filename=BytesIO(file_content))
 
     sheet = validate_picklist_file(workbook, ecom_code)
-    orders = extract_picklist_item(sheet, ecom_code, picklist_id)
+    items = extract_picklist_item(sheet, ecom_code, picklist_id)
 
     # region Save File
     new_picklistfile = PicklistFile_TR(
@@ -327,24 +353,24 @@ async def upload(
         for row in product_mappings
     }
 
-    # Assign stock_id and picklistfile_id to each order
+    # Assign stock_id and picklistfile_id to each item
     picklistfile_id = new_picklistfile.id
 
-    for order in orders:
+    for item in items:
         stock_key = (
-            order["field1"],
-            order["field2"],
-            order["field3"],
-            order["field4"],
-            order["field5"],
+            item["field1"],
+            item["field2"],
+            item["field3"],
+            item["field4"],
+            item["field5"],
         )
-        order["stock_id"] = stock_lookup.get(stock_key)
-        order["picklistfile_id"] = picklistfile_id
+        item["stock_id"] = stock_lookup.get(stock_key)
+        item["picklistfile_id"] = picklistfile_id
 
-    # Bulk insert the orders into the PicklistItem_TR table
-    db.bulk_insert_mappings(PicklistItem_TR, orders)
+    # Bulk insert the items into the PicklistItem_TR table
+    db.bulk_insert_mappings(PicklistItem_TR, items)
     db.commit()
 
     workbook.close()
 
-    return {"orders": orders}
+    return {"msg": "Successfully processed Picklist File!", "data": items}

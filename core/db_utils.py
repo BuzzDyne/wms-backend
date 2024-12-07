@@ -8,6 +8,7 @@ from database import (
     StockType_TR,
     StockSize_TR,
     StockColor_TR,
+    ProductMapping_TR,
 )
 
 from datetime import datetime
@@ -136,6 +137,14 @@ def update_stock_quantity_by_stock_id(db: Session, stock_id: int, count: int):
     stock = get_stock_by_stock_id(db, stock_id)
     stock.quantity -= count
     db.commit()
+
+
+# endregion
+
+
+# region ProductMappingTR
+def get_all_product_mapping(db: Session):
+    return db.query(ProductMapping_TR).all()
 
 
 # endregion
