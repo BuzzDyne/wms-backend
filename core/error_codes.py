@@ -24,6 +24,8 @@ class ErrCode(Enum):
     PIC_FIN_E04 = "Picklist still has item(s) unmapped StockID (PIC_FIN_E04)"
     PIC_OPI_E01 = "Picklist not found (PIC_OPI_E01)"
     PIC_OPI_E02 = "Picklist status is '{}'. Expected: '{}' (PIC_OPI_E02)"
+    PIC_SEM_E01 = "Picklist not found (PIC_SEM_E01)"
+    PIC_SEM_E02 = "Stock with the given Size, Color and Type is not found (PIC_SEM_E02)"
 
     @classmethod
     def format_error(cls, code, *args) -> dict:

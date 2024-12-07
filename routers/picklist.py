@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Body, UploadFile
-from datetime import datetime, timedelta
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile
+from datetime import datetime
 from openpyxl import load_workbook
 from sqlalchemy.orm import Session
 from fastapi_jwt_auth import AuthJWT
@@ -10,7 +10,7 @@ from database import (
     ProductMapping_TR,
     Picklist_TM,
 )
-from schemas import RepeatItemMappingRequest
+from schemas import RepeatItemMappingRequest, SetItemMappingRequest
 from constant import XLS_FILE_FORMAT
 from core.error_codes import ErrCode as E
 from core.db_enums import PicklistTMStatus, PicklistItemTRIsExcluded
@@ -22,6 +22,7 @@ from core.db_utils import (
     get_picklistitem_by_picklistitem_id,
     copy_stock_id_by_picklistitem_object,
     get_all_product_mapping,
+    get_stock_by_variant_ids,
 )
 from core.utils import validate_picklist_file, extract_picklist_item
 from io import BytesIO
@@ -374,3 +375,39 @@ async def upload(
     workbook.close()
 
     return {"msg": "Successfully processed Picklist File!", "data": items}
+
+
+@router.post("/item/{picklistitem_id}/set-mapping")
+async def set_item_mapping(
+    picklistitem_id: int,
+    data: SetItemMappingRequest,
+    Authorize: AuthJWT = Depends(),
+    db: Session = Depends(get_db),
+):
+    Authorize.jwt_required()
+    user_id = Authorize.get_raw_jwt()["user_id"]
+
+    item = get_picklistitems_by_picklist_id(db, picklistitem_id)
+
+    if not item:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=E.format_error(E.PIC_SEM_E01),
+        )
+
+    stock = get_stock_by_variant_ids(
+        db, data.stock_type_id, data.stock_size_id, data.stock_color_id
+    )
+
+    if not stock:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=E.format_error(E.PIC_SEM_E02),
+        )
+
+    item.stock_id = data.stock_id
+    db.commit()
+
+    # TODO Logging
+
+    return {"msg": "PicklistItem's stock_id updated successfully"}

@@ -28,3 +28,9 @@ class RegisterForm(BaseModel):
 
 class RepeatItemMappingRequest(BaseModel):
     mapped_picklistitem_id: Optional[int]
+
+
+class SetItemMappingRequest(BaseModel):
+    stock_size_id: int
+    stock_type_id: int
+    stock_color_id: int

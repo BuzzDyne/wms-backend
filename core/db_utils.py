@@ -1,5 +1,4 @@
 from sqlalchemy.orm import Session
-from fastapi import HTTPException, status
 from core.db_enums import PicklistTMStatus, StockTMIsActive
 from database import (
     Picklist_TM,
@@ -133,10 +132,34 @@ def get_stock_by_stock_id(db: Session, stock_id: int):
     return db.query(Stock_TM).filter(Stock_TM.id == stock_id).first()
 
 
+def get_stock_by_variant_ids(db: Session, type_id: int, size_id: int, color_id: int):
+    return (
+        db.query(Stock_TM)
+        .filter(
+            Stock_TM.stock_type_id == type_id,
+            Stock_TM.stock_size_id == size_id,
+            Stock_TM.stock_color_id == color_id,
+        )
+        .first()
+    )
+
+
 def update_stock_quantity_by_stock_id(db: Session, stock_id: int, count: int):
     stock = get_stock_by_stock_id(db, stock_id)
     stock.quantity -= count
     db.commit()
+
+
+def get_all_stock_size(db: Session):
+    return db.query(StockSize_TR).all()
+
+
+def get_all_stock_type(db: Session):
+    return db.query(StockType_TR).all()
+
+
+def get_all_stock_color(db: Session):
+    return db.query(StockColor_TR).all()
 
 
 # endregion
@@ -145,6 +168,12 @@ def update_stock_quantity_by_stock_id(db: Session, stock_id: int, count: int):
 # region ProductMappingTR
 def get_all_product_mapping(db: Session):
     return db.query(ProductMapping_TR).all()
+
+
+def get_product_mapping_by_id(db: Session, mapping_id: int):
+    return (
+        db.query(ProductMapping_TR).filter(ProductMapping_TR.id == mapping_id).first()
+    )
 
 
 # endregion
