@@ -165,6 +165,71 @@ def get_all_stock_color(db: Session):
 # endregion
 
 
+# region StockTypeTR
+def get_stocktype_by_value(db: Session, type_value: str):
+    return db.query(StockType_TR).filter(StockType_TR.type_value == type_value).first()
+
+
+def create_stocktype(db: Session, type_value: str, type_name: str):
+    new_stocktype = StockType_TR(
+        type_value=type_value,
+        type_name=type_name,
+    )
+
+    db.add(new_stocktype)
+    db.commit()
+    db.refresh(new_stocktype)
+
+    return new_stocktype
+
+
+# end region
+
+
+# region StockSizeTR
+def get_stocksize_by_value(db: Session, size_value: str):
+    return db.query(StockSize_TR).filter(StockSize_TR.size_value == size_value).first()
+
+
+def create_stocksize(db: Session, size_value: str, size_name: str):
+    new_stocksize = StockSize_TR(
+        size_value=size_value,
+        size_name=size_name,
+    )
+
+    db.add(new_stocksize)
+    db.commit()
+    db.refresh(new_stocksize)
+
+    return new_stocksize
+
+
+# end region
+
+
+# region StockColorTR
+def get_stockcolor_by_name(db: Session, color_name: str):
+    return (
+        db.query(StockColor_TR).filter(StockColor_TR.color_name == color_name).first()
+    )
+
+
+def create_stockcolor(db: Session, color_name: str, color_hex: str):
+    new_stockcolor = StockColor_TR(
+        color_name=color_name,
+        color_hex=color_hex,
+    )
+
+    db.add(new_stockcolor)
+    db.commit()
+    db.refresh(new_stockcolor)
+
+    return new_stockcolor
+
+
+# end region
+
+
 # region ProductMappingTR
 def get_all_product_mapping(db: Session):
     return db.query(ProductMapping_TR).all()

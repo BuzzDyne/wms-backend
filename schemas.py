@@ -34,3 +34,17 @@ class SetItemMappingRequest(BaseModel):
     stock_size_id: int
     stock_type_id: int
     stock_color_id: int
+
+
+class CreateNewVariantTypeRequest(BaseModel):
+    type_name: str
+
+
+class CreateNewVariantSizeRequest(BaseModel):
+    size_name_start: str
+    size_name_end: Optional[str]
+
+
+class CreateNewVariantColorRequest(BaseModel):
+    color_name: str
+    color_hex: str

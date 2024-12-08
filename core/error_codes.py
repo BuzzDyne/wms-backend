@@ -27,6 +27,13 @@ class ErrCode(Enum):
     PIC_SEM_E01 = "Picklist not found (PIC_SEM_E01)"
     PIC_SEM_E02 = "Stock with the given Size, Color and Type is not found (PIC_SEM_E02)"
 
+    STO_NSZ_E01 = "Invalid size name format (STO_NSZ_E01)"
+    STO_NSZ_E02 = "Size '{}' already exists (STO_NSZ_E02)"
+    STO_NTY_E01 = "Invalid type name format (STO_NTY_E01)"
+    STO_NTY_E02 = "Type '{}' already exists (STO_NTY_E02)"
+    STO_NCO_E01 = "Invalid color format (STO_NCO_E01)"
+    STO_NCO_E02 = "Color '{}' already exists (STO_NCO_E02)"
+
     @classmethod
     def format_error(cls, code, *args) -> dict:
         """

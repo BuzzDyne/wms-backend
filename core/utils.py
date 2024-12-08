@@ -1,4 +1,5 @@
 import re
+from typing import Optional, Tuple
 from constant import XLS
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
@@ -252,3 +253,93 @@ def extract_picklist_item(sheet, ecom_code, picklist_id):
         orders.extend(create_order(row))  # Extend with multiple orders if quantity > 1
 
     return orders
+
+
+def transform_size_names(
+    size_start: str, size_end: Optional[str] = None
+) -> Optional[Tuple[str, str]]:
+    """Transforms and validates size names.
+
+    Args:
+        size_start (str): The starting size name.
+        size_end (Optional[str]): The ending size name, if applicable.
+
+    Returns:
+        Optional[Tuple[str, str]]: A tuple containing the valid size name and value,
+                                   or None if validation fails.
+    """
+    # Transform start name
+    size_start = size_start.upper().strip()
+    if not re.match(r"^[A-Z0-9 ]+$", size_start):
+        return None
+
+    size_name_start = size_start
+    size_value_start = size_start.replace(" ", "_")
+
+    # Initialize and transform size_end
+    if size_end:
+        size_end = size_end.upper().strip()
+        if not re.match(r"^[A-Z0-9 ]+$", size_end):
+            return None
+        size_name_end = size_end
+        size_value_end = size_end.replace(" ", "_")
+
+    # Combine the two names if size_end is provided
+    if size_end:
+        valid_size_value = f"{size_value_start}_TO_{size_value_end}"
+        valid_size_name = f"{size_name_start} - {size_name_end}"
+    else:
+        valid_size_value = size_value_start
+        valid_size_name = size_name_start
+
+    return valid_size_name, valid_size_value
+
+
+def transform_type_name(type_name: str) -> Optional[Tuple[str, str]]:
+    """Transforms and validates a type name.
+
+    This function converts a type name to uppercase, replaces spaces with underscores,
+    and ensures the name contains only valid characters.
+
+    Args:
+        type_name (str): The type name to be transformed.
+
+    Returns:
+        Optional[Tuple[str, str]]: A tuple containing the original and transformed type name,
+                                   or None if validation fails.
+    """
+    # Transform type name
+    type_name = type_name.upper().strip()
+    if not re.match(r"^[A-Z0-9 ]+$", type_name):
+        return None
+
+    type_value = type_name.replace(" ", "_")
+
+    return type_name, type_value
+
+
+def transform_color_name(color_name: str, color_hex: str) -> Optional[Tuple[str, str]]:
+    """Transforms and validates a color name and hex code.
+
+    This function converts a color name to uppercase, trims leading and trailing spaces,
+    and ensures the color name contains only valid characters. It also validates that
+    the hex code is exactly 6 uppercase hexadecimal characters.
+
+    Args:
+        color_name (str): The name of the color to be transformed and validated.
+        color_hex (str): The hexadecimal color code to be validated.
+
+    Returns:
+        Optional[Tuple[str, str]]: A tuple containing the validated color name and hex code,
+                                   or None if validation fails.
+    """
+    # Transform and validate color name
+    color_name = color_name.upper().strip()
+    if not re.match(r"^[A-Z0-9 ]+$", color_name):
+        return None
+
+    # Validate color hex code
+    if not re.match(r"^[A-F0-9]{6}$", color_hex):
+        return None
+
+    return color_name, color_hex
