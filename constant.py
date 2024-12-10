@@ -40,9 +40,11 @@ XLS = {
             "data": 1,
         },
         "fields": {
-            "ORDERID": {"INDEX": 3, "NAME": "OrderNumber"},
-            "PRODUCT": {"INDEX": 2, "NAME": "Product"},
-            "QUANTITY": {"INDEX": 4, "NAME": "Quantity"},
+            "ORDERID": {"INDEX": 0, "NAME": "orderItemId"},
+            "PRODUCT": {"INDEX": 51, "NAME": "itemName"},
+            "VARIANT": {"INDEX": 52, "NAME": "variation"},
         },
     },
 }
+
+ECOM_CODES = ["TIK", "TOK", "SHO", "LAZ"]

@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from core.db_enums import PicklistTMStatus, StockTMIsActive
 from database import (
     Picklist_TM,
+    PicklistFile_TR,
     PicklistItem_TR,
     Stock_TM,
     StockType_TR,
@@ -44,6 +45,62 @@ def set_picklist_status(db: Session, picklist, new_picklist_status: PicklistTMSt
 # endregion
 
 
+# region PicklistFileTR
+def get_picklistfile_by_id(db: Session, file_id: int):
+    return db.query(PicklistFile_TR).filter(PicklistFile_TR.id == file_id).first()
+
+
+def get_picklistfile_by_picklist_id(db: Session, picklist_id: int):
+    return (
+        db.query(PicklistFile_TR)
+        .filter(PicklistFile_TR.picklist_id == picklist_id)
+        .all()
+    )
+
+
+def get_picklistfile_by_picklist_id_and_ecom_code(
+    db: Session, picklist_id: int, ecom_code: str
+):
+    return (
+        db.query(PicklistFile_TR)
+        .filter(
+            PicklistFile_TR.picklist_id == picklist_id,
+            PicklistFile_TR.ecom_code == ecom_code,
+        )
+        .first()
+    )
+
+
+def delete_picklistfile_by_id(db: Session, file_id: int):
+    picklist_file = (
+        db.query(PicklistFile_TR).filter(PicklistFile_TR.id == file_id).first()
+    )
+    # If found, delete it
+    if picklist_file:
+        db.delete(picklist_file)
+        db.commit()
+
+
+def delete_picklistfile_by_picklist_id_and_ecom_code(
+    db: Session, picklist_id: int, ecom_code: str
+):
+    picklist_file = (
+        db.query(PicklistFile_TR)
+        .filter(
+            PicklistFile_TR.picklist_id == picklist_id,
+            PicklistFile_TR.ecom_code == ecom_code,
+        )
+        .first()
+    )
+    # If found, delete it
+    if picklist_file:
+        db.delete(picklist_file)
+        db.commit()
+
+
+# endregion
+
+
 # region PicklistItemTR
 def get_picklistitems_by_picklist_id(db: Session, picklist_id: int):
     return (
@@ -53,10 +110,35 @@ def get_picklistitems_by_picklist_id(db: Session, picklist_id: int):
     )
 
 
-def get_picklistitem_by_picklistitem_id(db: Session, picklistitem_id: int):
+def get_picklistitem_by_id(db: Session, picklistitem_id: int):
     return (
         db.query(PicklistItem_TR).filter(PicklistItem_TR.id == picklistitem_id).first()
     )
+
+
+def set_is_excluded_picklistitem_by_id(
+    db: Session, picklistitem_id: int, exclude_flag: int
+):
+    picklist_item = (
+        db.query(PicklistItem_TR).filter(PicklistItem_TR.id == picklistitem_id).first()
+    )
+    # If found, delete all picklist items
+    if picklist_item:
+        picklist_item.is_excluded = exclude_flag
+        db.commit()
+
+
+def delete_picklistitems_by_picklistfile_id(db: Session, picklistfile_id: int):
+    picklist_items = (
+        db.query(PicklistItem_TR)
+        .filter(PicklistItem_TR.picklistfile_id == picklistfile_id)
+        .all()
+    )
+    # If found, delete all picklist items
+    if picklist_items:
+        for item in picklist_items:
+            db.delete(item)
+        db.commit()
 
 
 def copy_stock_id_by_picklistitem_object(db: Session, picklistitem: PicklistItem_TR):
@@ -151,15 +233,29 @@ def update_stock_quantity_by_stock_id(db: Session, stock_id: int, count: int):
 
 
 def get_all_stock_size(db: Session):
-    return db.query(StockSize_TR).all()
+    return db.query(StockSize_TR).order_by(StockSize_TR.size_name.asc()).all()
+
+
+def get_stock_size_name_by_id(db: Session, size_id: int):
+    return db.query(StockSize_TR).filter(StockSize_TR.id == size_id).first().size_name
 
 
 def get_all_stock_type(db: Session):
-    return db.query(StockType_TR).all()
+    return db.query(StockType_TR).order_by(StockType_TR.type_name.asc()).all()
+
+
+def get_stock_type_name_by_id(db: Session, type_id: int):
+    return db.query(StockType_TR).filter(StockType_TR.id == type_id).first().type_name
 
 
 def get_all_stock_color(db: Session):
-    return db.query(StockColor_TR).all()
+    return db.query(StockColor_TR).order_by(StockColor_TR.color_name.asc()).all()
+
+
+def get_stock_color_name_by_id(db: Session, color_id: int):
+    return (
+        db.query(StockColor_TR).filter(StockColor_TR.id == color_id).first().color_name
+    )
 
 
 # endregion
@@ -183,7 +279,7 @@ def create_stocktype(db: Session, type_value: str, type_name: str):
     return new_stocktype
 
 
-# end region
+# endregion
 
 
 # region StockSizeTR
@@ -204,7 +300,7 @@ def create_stocksize(db: Session, size_value: str, size_name: str):
     return new_stocksize
 
 
-# end region
+# endregion
 
 
 # region StockColorTR
@@ -227,7 +323,7 @@ def create_stockcolor(db: Session, color_name: str, color_hex: str):
     return new_stockcolor
 
 
-# end region
+# endregion
 
 
 # region ProductMappingTR

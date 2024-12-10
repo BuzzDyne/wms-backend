@@ -26,6 +26,14 @@ class ErrCode(Enum):
     PIC_OPI_E02 = "Picklist status is '{}'. Expected: '{}' (PIC_OPI_E02)"
     PIC_SEM_E01 = "Picklist not found (PIC_SEM_E01)"
     PIC_SEM_E02 = "Stock with the given Size, Color and Type is not found (PIC_SEM_E02)"
+    PIC_DFI_E01 = "Picklist not found (PIC_DFI_E01)"
+    PIC_DFI_E02 = "Picklist file not found (PIC_DFI_E02)"
+    PIC_DFI_E03 = "Picklist File doesn't belong to given picklist id (PIC_DFI_E03)"
+    PIC_DFI_E04 = "No File found for given ecom code and picklist id (PIC_DFI_E04)"
+
+    PIC_DIT_E01 = "Picklist not found (PIC_DIT_E01)"
+    PIC_DIT_E02 = "Picklist item not found (PIC_DIT_E02)"
+    PIC_DIT_E03 = "Picklist Item doesn't belong to given picklist id (PIC_DIT_E03)"
 
     STO_NSZ_E01 = "Invalid size name format (STO_NSZ_E01)"
     STO_NSZ_E02 = "Size '{}' already exists (STO_NSZ_E02)"

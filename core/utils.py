@@ -224,13 +224,22 @@ def extract_picklist_item(sheet, ecom_code, picklist_id):
     elif ecom_code == "LAZ":
 
         def create_order(row):
-            quantity = int(row[config["fields"]["QUANTITY"]["INDEX"]])
+            product_name = row[config["fields"]["PRODUCT"]["INDEX"]]
+            product_variant = row[config["fields"]["VARIANT"]["INDEX"]]
+
+            # Clean and check the variant
+            product_variant = product_variant.strip() if product_variant else None
+
             base_order = {
                 "ecom_code": ecom_code,
                 "ecom_order_id": row[config["fields"]["ORDERID"]["INDEX"]],
-                "product_name": row[config["fields"]["PRODUCT"]["INDEX"]],
-                "field1": row[config["fields"]["PRODUCT"]["INDEX"]],
-                "field2": None,
+                "product_name": (
+                    f"{product_name} - {product_variant}"
+                    if product_variant
+                    else product_name
+                ),
+                "field1": product_name,
+                "field2": product_variant,
                 "field3": None,
                 "field4": None,
                 "field5": None,
@@ -239,7 +248,7 @@ def extract_picklist_item(sheet, ecom_code, picklist_id):
                 "stock_id": None,
             }
             # Duplicate order entries for each quantity
-            return [base_order.copy() for _ in range(quantity)]
+            return [base_order]
 
     else:
 
@@ -343,3 +352,22 @@ def transform_color_name(color_name: str, color_hex: str) -> Optional[Tuple[str,
         return None
 
     return color_name, color_hex
+
+
+def map_picklistfile_ids(picklist_files):
+    file_ids = {
+        "tik_file_id": None,
+        "tok_file_id": None,
+        "sho_file_id": None,
+        "laz_file_id": None,
+    }
+    for file in picklist_files:
+        if file.ecom_code == "TIK":
+            file_ids["tik_file_id"] = file.id
+        elif file.ecom_code == "TOK":
+            file_ids["tok_file_id"] = file.id
+        elif file.ecom_code == "SHO":
+            file_ids["sho_file_id"] = file.id
+        elif file.ecom_code == "LAZ":
+            file_ids["laz_file_id"] = file.id
+    return file_ids

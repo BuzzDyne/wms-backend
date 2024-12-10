@@ -1,5 +1,39 @@
-from typing import Optional
+from typing import List, Optional, Dict
 from pydantic import BaseModel
+
+
+# Picklist
+
+
+class Item(BaseModel):
+    item_id: int
+    item_name: str
+    is_excluded: int
+
+
+class UnmappedItem(BaseModel):
+    item_id: int
+    item_name: str
+    ecom_code: str
+    is_excluded: int
+
+
+class Stock(BaseModel):
+    stock_id: int
+    product_type: str
+    product_color: str
+    product_size: str
+    count: int
+    items: Dict[str, List[Item]]  # Dictionary to map platforms to lists of items
+
+
+class PicklistDashboardResponse(BaseModel):
+    tik_file_id: Optional[int]
+    tok_file_id: Optional[int]
+    sho_file_id: Optional[int]
+    laz_file_id: Optional[int]
+    stocks: List[Stock]
+    unmapped_items: List[UnmappedItem]
 
 
 # User Table

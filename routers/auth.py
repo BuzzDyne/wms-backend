@@ -13,7 +13,7 @@ from core.db_enums import UserTMStatus
 
 router = APIRouter(tags=["Auth"], prefix="/auth")
 
-ACCESS_TOKEN_EXP = timedelta(minutes=50)
+ACCESS_TOKEN_EXP = timedelta(minutes=120)
 REFRESH_TOKEN_EXP = timedelta(days=7)
 
 
@@ -200,7 +200,9 @@ def refresh(Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
             detail=E.format_error(E.AUT_REF_E02),
         )
 
+    token_payload = {"role_id": user.role_id, "user_id": user.id}
+
     new_access_token = Authorize.create_access_token(
-        subject=current_user, expires_time=ACCESS_TOKEN_EXP
+        subject=current_user, user_claims=token_payload, expires_time=ACCESS_TOKEN_EXP
     )
     return {"access_token": new_access_token}
