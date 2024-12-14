@@ -158,7 +158,7 @@ def get_picklist_dashboard(
         stock_key = (stock.stock_type_id, stock.stock_color_id, stock.stock_size_id)
         if stock_key not in stock_map:
             stock_map[stock_key] = {
-                "stock_id": stock.id,  # Add stock.id here
+                "stock_id": stock.id,
                 "product_type": get_stock_type_name_by_id(db, stock.stock_type_id),
                 "product_color": get_stock_color_name_by_id(db, stock.stock_color_id),
                 "product_size": get_stock_size_name_by_id(db, stock.stock_size_id),
@@ -179,6 +179,7 @@ def get_picklist_dashboard(
                 "item_id": item.id,
                 "item_name": item.product_name,
                 "is_excluded": item.is_excluded,
+                "ecom_order_id": item.ecom_order_id,
             }
         )
 

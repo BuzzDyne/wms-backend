@@ -9,6 +9,7 @@ class Item(BaseModel):
     item_id: int
     item_name: str
     is_excluded: int
+    ecom_order_id: str
 
 
 class UnmappedItem(BaseModel):
