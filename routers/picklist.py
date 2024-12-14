@@ -35,6 +35,11 @@ from core.db_utils import (
     get_stock_color_name_by_id,
     get_picklistfile_by_id,
     get_picklistfile_by_picklist_id_and_ecom_code,
+    get_stocktype_by_value,
+    get_stocksize_by_value,
+    get_stockcolor_by_name,
+    create_stock,
+    create_product_mapping,
     delete_picklistfile_by_picklist_id_and_ecom_code,
     delete_picklistitems_by_picklistfile_id,
     delete_picklistfile_by_id,
@@ -77,6 +82,42 @@ def list_picklists(
         "size": size,
         "total": total,
     }
+
+
+@router.post("/")
+def create_picklist(
+    Authorize: AuthJWT = Depends(),
+    db: Session = Depends(get_db),
+):
+    Authorize.jwt_required()
+    user_id = Authorize.get_raw_jwt()["user_id"]
+
+    # Check if on draft picklist exists
+    picklist = (
+        db.query(Picklist_TM)
+        .filter(Picklist_TM.picklist_status == PicklistTMStatus.ON_DRAFT)
+        .all()
+    )
+
+    if picklist:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=E.format_error(E.PIC_NEW_E01),
+        )
+
+    # Add picklist to DB
+    new_picklist = Picklist_TM(
+        draft_create_dt=datetime.now(),
+        picklist_status=PicklistTMStatus.ON_DRAFT,
+    )
+
+    db.add(new_picklist)
+    db.commit()
+    db.refresh(new_picklist)
+
+    # TODO Logging
+
+    return {"msg": f"Successfully created picklist!", "data": new_picklist}
 
 
 @router.get("/{picklist_id}/dashboard", response_model=PicklistDashboardResponse)
@@ -257,42 +298,6 @@ def delete_file_by_ecom_code(
     return {"msg": f"Successfully delete picklistfile (ID: {db_file.id})!"}
 
 
-@router.post("/")
-def create_picklist(
-    Authorize: AuthJWT = Depends(),
-    db: Session = Depends(get_db),
-):
-    Authorize.jwt_required()
-    user_id = Authorize.get_raw_jwt()["user_id"]
-
-    # Check if on draft picklist exists
-    picklist = (
-        db.query(Picklist_TM)
-        .filter(Picklist_TM.picklist_status == PicklistTMStatus.ON_DRAFT)
-        .all()
-    )
-
-    if picklist:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=E.format_error(E.PIC_NEW_E01),
-        )
-
-    # Add picklist to DB
-    new_picklist = Picklist_TM(
-        draft_create_dt=datetime.now(),
-        picklist_status=PicklistTMStatus.ON_DRAFT,
-    )
-
-    db.add(new_picklist)
-    db.commit()
-    db.refresh(new_picklist)
-
-    # TODO Logging
-
-    return {"msg": f"Successfully created picklist!", "data": new_picklist}
-
-
 @router.post("/{picklist_id}/update/cancelled")
 async def cancel_draft(
     picklist_id: int,
@@ -401,7 +406,6 @@ async def repeat_item_mapping(
     # If mapped item id given, copy from that
     if data.mapped_picklistitem_id:
         item = get_picklistitem_by_id(db, data.mapped_picklistitem_id)
-        print()
 
         if item.picklist_id != picklist_id:
             raise HTTPException(
@@ -617,7 +621,7 @@ async def set_item_mapping(
     Authorize.jwt_required()
     user_id = Authorize.get_raw_jwt()["user_id"]
 
-    item = get_picklistitems_by_picklist_id(db, picklistitem_id)
+    item = get_picklistitem_by_id(db, picklistitem_id)
 
     if not item:
         raise HTTPException(
@@ -625,26 +629,38 @@ async def set_item_mapping(
             detail=E.format_error(E.PIC_SEM_E01),
         )
 
-    stock = get_stock_by_variant_ids(
-        db, data.stock_type_id, data.stock_size_id, data.stock_color_id
-    )
+    # Get Variants from DB
+    type_db = get_stocktype_by_value(db, data.stock_type_value)
+    size_db = get_stocksize_by_value(db, data.stock_size_value)
+    color_db = get_stockcolor_by_name(db, data.stock_color_name)
 
-    if not stock:
+    if not (type_db and size_db and color_db):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=E.format_error(E.PIC_SEM_E02),
         )
 
-    item.stock_id = data.stock_id
+    # Get Stock
+    stock_db = get_stock_by_variant_ids(db, type_db.id, size_db.id, color_db.id)
+
+    if not stock_db:
+        stock_db = create_stock(db, type_db.id, size_db.id, color_db.id)
+
+    # Insert New ProductMapping
+    mapping_db = create_product_mapping(db, item, stock_db.id)
+
+    item.stock_id = stock_db.id
     db.commit()
 
     # TODO Logging
 
-    return {"msg": "PicklistItem's stock_id updated successfully"}
+    return {
+        "msg": f"PicklistItem (ID {item.id}) stock_id updated to stock (ID {stock_db.id}) successfully. (Mapping ID {mapping_db.id})"
+    }
 
 
 def update_picklistitem_status(
-    db: Session, picklist_id: int, item_id: int, status: str
+    db: Session, picklist_id: int, item_id: int, is_excluded: str
 ):
     db_picklist = get_picklist_by_id(db, picklist_id)
 
@@ -668,6 +684,8 @@ def update_picklistitem_status(
             detail=E.format_error(E.PIC_DFI_E03),
         )
 
-    set_is_excluded_picklistitem_by_id(db, db_item.id, status)
+    set_is_excluded_picklistitem_by_id(db, db_item.id, is_excluded)
 
-    return {"msg": f"Successfully updated picklistitem (ID: {item_id}) to {status}!"}
+    return {
+        "msg": f"Successfully updated picklistitem (ID: {item_id}) to {is_excluded}!"
+    }

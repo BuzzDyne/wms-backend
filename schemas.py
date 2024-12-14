@@ -65,9 +65,9 @@ class RepeatItemMappingRequest(BaseModel):
 
 
 class SetItemMappingRequest(BaseModel):
-    stock_size_id: int
-    stock_type_id: int
-    stock_color_id: int
+    stock_size_value: str
+    stock_type_value: str
+    stock_color_name: str
 
 
 class CreateNewVariantTypeRequest(BaseModel):

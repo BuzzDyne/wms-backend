@@ -258,6 +258,20 @@ def get_stock_color_name_by_id(db: Session, color_id: int):
     )
 
 
+def create_stock(db: Session, type_id: int, size_id: int, color_id: int):
+    new_stock = Stock_TM(
+        stock_type_id=type_id,
+        stock_size_id=size_id,
+        stock_color_id=color_id,
+    )
+
+    db.add(new_stock)
+    db.commit()
+    db.refresh(new_stock)
+
+    return new_stock
+
+
 # endregion
 
 
@@ -335,6 +349,24 @@ def get_product_mapping_by_id(db: Session, mapping_id: int):
     return (
         db.query(ProductMapping_TR).filter(ProductMapping_TR.id == mapping_id).first()
     )
+
+
+def create_product_mapping(db: Session, item: PicklistItem_TR, stock_id: int):
+    new_mapping = ProductMapping_TR(
+        ecom_code=item.ecom_code,
+        field1=item.field1,
+        field2=item.field2,
+        field3=item.field3,
+        field4=item.field4,
+        field5=item.field5,
+        stock_id=stock_id,
+    )
+
+    db.add(new_mapping)
+    db.commit()
+    db.refresh(new_mapping)
+
+    return new_mapping
 
 
 # endregion
