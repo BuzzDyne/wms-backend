@@ -81,6 +81,19 @@ def delete_picklistfile_by_id(db: Session, file_id: int):
         db.commit()
 
 
+def delete_picklistfile_by_picklist_id(db: Session, picklist_id: int):
+    picklist_files = (
+        db.query(PicklistFile_TR)
+        .filter(PicklistFile_TR.picklist_id == picklist_id)
+        .all()
+    )
+    # If found, delete them
+    if picklist_files:
+        for picklist_file in picklist_files:
+            db.delete(picklist_file)
+        db.commit()
+
+
 def delete_picklistfile_by_picklist_id_and_ecom_code(
     db: Session, picklist_id: int, ecom_code: str
 ):
@@ -132,6 +145,19 @@ def delete_picklistitems_by_picklistfile_id(db: Session, picklistfile_id: int):
     picklist_items = (
         db.query(PicklistItem_TR)
         .filter(PicklistItem_TR.picklistfile_id == picklistfile_id)
+        .all()
+    )
+    # If found, delete all picklist items
+    if picklist_items:
+        for item in picklist_items:
+            db.delete(item)
+        db.commit()
+
+
+def delete_picklistitems_by_picklist_id(db: Session, picklist_id: int):
+    picklist_items = (
+        db.query(PicklistItem_TR)
+        .filter(PicklistItem_TR.picklist_id == picklist_id)
         .all()
     )
     # If found, delete all picklist items

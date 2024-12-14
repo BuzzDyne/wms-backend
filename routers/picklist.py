@@ -41,8 +41,10 @@ from core.db_utils import (
     create_stock,
     create_product_mapping,
     delete_picklistfile_by_picklist_id_and_ecom_code,
+    delete_picklistfile_by_picklist_id,
     delete_picklistitems_by_picklistfile_id,
     delete_picklistfile_by_id,
+    delete_picklistitems_by_picklist_id,
     set_is_excluded_picklistitem_by_id,
 )
 from core.utils import (
@@ -265,6 +267,39 @@ def delete_file_by_id(
     delete_picklistfile_by_id(db, db_file.id)
 
     return {"msg": f"Successfully delete picklistfile (ID: {file_id})!"}
+
+
+@router.delete("/{picklist_id}/file")
+def delete_file_by_picklist_id(
+    picklist_id: int,
+    Authorize: AuthJWT = Depends(),
+    db: Session = Depends(get_db),
+):
+    Authorize.jwt_required()
+    user_id = Authorize.get_raw_jwt()["user_id"]
+
+    db_picklist = get_picklist_by_id(db, picklist_id)
+
+    if not db_picklist:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=E.format_error(E.PIC_DFI_E01),  # TODO Fix ErroCode
+        )
+
+    db_file = get_picklistfile_by_picklist_id(db, picklist_id)
+
+    if not db_file:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=E.format_error(E.PIC_DFI_E04),  # TODO Fix ErroCode
+        )
+
+    delete_picklistitems_by_picklist_id(db, picklist_id)
+    delete_picklistfile_by_picklist_id(db, picklist_id)
+
+    return {
+        "msg": f"Successfully delete all item and file (PicklistID: {picklist_id})!"
+    }
 
 
 @router.delete("/{picklist_id}/file/ecom_code/{ecom_code}")
