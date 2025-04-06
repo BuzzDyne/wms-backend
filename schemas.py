@@ -83,3 +83,11 @@ class CreateNewVariantSizeRequest(BaseModel):
 class CreateNewVariantColorRequest(BaseModel):
     color_name: str
     color_hex: str
+
+
+class InboundSchedule(BaseModel):
+    id: int
+    schedule_date: str
+    created_dt: str
+    creator_id: int
+    is_active: int

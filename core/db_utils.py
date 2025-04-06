@@ -9,6 +9,7 @@ from database import (
     StockSize_TR,
     StockColor_TR,
     ProductMapping_TR,
+    # InboundSchedule_TM,
 )
 
 from datetime import datetime
@@ -393,6 +394,14 @@ def create_product_mapping(db: Session, item: PicklistItem_TR, stock_id: int):
     db.refresh(new_mapping)
 
     return new_mapping
+
+
+# endregion
+
+
+# region InboundScheduleTM
+def get_all_inbound_schedules(db: Session):
+    return db.query(InboundSchedule_TM).all()
 
 
 # endregion
