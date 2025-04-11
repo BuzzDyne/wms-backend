@@ -61,6 +61,10 @@ class RegisterForm(BaseModel):
     rolename: str
 
 
+class ChangePasswordRequest(BaseModel):
+    new_password: str
+
+
 class RepeatItemMappingRequest(BaseModel):
     mapped_picklistitem_id: Optional[int]
 
