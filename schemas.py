@@ -91,3 +91,41 @@ class InboundSchedule(BaseModel):
     created_dt: str
     creator_id: int
     is_active: int
+
+
+class ProductMappingResponse(BaseModel):
+    id: int
+    ecom_code: str
+    field1: str
+    field2: str
+    field3: str
+    field4: str
+    field5: str
+    stock_id: int
+    stock_type: str
+    stock_color: str
+    stock_size: str
+
+    class Config:
+        orm_mode = True
+
+
+class ProductMappingDetail(BaseModel):
+    mapping_id: int
+    ecom_code: str
+    field1: str
+    field2: Optional[str]  # Allow None
+    field3: Optional[str]  # Allow None
+    field4: Optional[str]  # Allow None
+    field5: Optional[str]  # Allow None
+
+
+class CategorizedProductMappingResponse(BaseModel):
+    stock_id: int
+    stock_type: str
+    stock_color: str
+    stock_size: str
+    mappings: List[ProductMappingDetail]
+
+    class Config:
+        orm_mode = True
