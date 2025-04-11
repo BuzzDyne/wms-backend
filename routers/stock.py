@@ -51,6 +51,33 @@ def get_variants(
     }
 
 
+@router.get("/variant/size")
+def get_variant_size(
+    Authorize: AuthJWT = Depends(),
+    db: Session = Depends(get_db),
+):
+    Authorize.jwt_required()
+    return {"data": get_all_stock_size(db)}
+
+
+@router.get("/variant/type")
+def get_variant_type(
+    Authorize: AuthJWT = Depends(),
+    db: Session = Depends(get_db),
+):
+    Authorize.jwt_required()
+    return {"data": get_all_stock_type(db)}
+
+
+@router.get("/variant/color")
+def get_variant_color(
+    Authorize: AuthJWT = Depends(),
+    db: Session = Depends(get_db),
+):
+    Authorize.jwt_required()
+    return {"data": get_all_stock_color(db)}
+
+
 @router.post("/variant/size")
 def create_variant_size(
     data: CreateNewVariantSizeRequest,
