@@ -9,7 +9,7 @@ from database import (
     StockSize_TR,
     StockColor_TR,
     ProductMapping_TR,
-    # InboundSchedule_TM,
+    InboundSchedule_TM,
 )
 
 from datetime import datetime
@@ -428,14 +428,6 @@ def delete_product_mapping_by_id(db: Session, mapping_id: int) -> bool:
     db.delete(mapping)
     db.commit()
     return True
-
-
-# endregion
-
-
-# region InboundScheduleTM
-def get_all_inbound_schedules(db: Session):
-    return db.query(InboundSchedule_TM).all()
 
 
 # endregion

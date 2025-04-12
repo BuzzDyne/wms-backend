@@ -23,6 +23,8 @@ Stock_TM = Base.classes.stock_tm
 StockType_TR = Base.classes.stocktype_tr
 StockSize_TR = Base.classes.stocksize_tr
 StockColor_TR = Base.classes.stockcolor_tr
+MasterParameter_TM = Base.classes.master_parameter_tm
+InboundSchedule_TM = Base.classes.inboundschedule_tm
 
 
 def get_db():

@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import timedelta
-from routers import auth, picklist, stock, mapping, user
+from routers import auth, picklist, stock, mapping, user, inbound
 from fastapi.responses import JSONResponse
 
 from fastapi_jwt_auth import AuthJWT
@@ -38,6 +38,7 @@ app.include_router(picklist.router, prefix=API_PREFIX)
 app.include_router(stock.router, prefix=API_PREFIX)
 app.include_router(mapping.router, prefix=API_PREFIX)
 app.include_router(user.router, prefix=API_PREFIX)
+app.include_router(inbound.router, prefix=API_PREFIX)
 
 
 # region AuthJWT

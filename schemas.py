@@ -94,7 +94,13 @@ class InboundSchedule(BaseModel):
     schedule_date: str
     created_dt: str
     creator_id: int
+    notes: Optional[str]  # Allow None
     is_active: int
+
+
+class CreateScheduleRequest(BaseModel):
+    schedule_date: str  # Format: YYYYMMDD
+    notes: str
 
 
 class ProductMappingResponse(BaseModel):
