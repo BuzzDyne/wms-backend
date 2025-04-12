@@ -139,3 +139,9 @@ class CategorizedProductMappingResponse(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class CreateNewStockRequest(BaseModel):
+    type_id: int
+    size_id: int
+    color_id: int

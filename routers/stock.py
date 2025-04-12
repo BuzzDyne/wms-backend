@@ -1,18 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Body, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from fastapi_jwt_auth import AuthJWT
-from database import get_db, ProductMapping_TR
-from constant import XLS_FILE_FORMAT
+from database import get_db
 from core.utils import transform_size_names, transform_type_name, transform_color_name
 from core.error_codes import ErrCode as E
-from core.db_enums import PicklistTMStatus, PicklistItemTRIsExcluded
 from schemas import (
     CreateNewVariantTypeRequest,
     CreateNewVariantSizeRequest,
     CreateNewVariantColorRequest,
+    CreateNewStockRequest,
 )
 from core.db_utils import (
-    get_stocks,
     get_all_stock_size,
     get_all_stock_type,
     get_all_stock_color,
@@ -22,6 +20,9 @@ from core.db_utils import (
     create_stocktype,
     get_stockcolor_by_name,
     create_stockcolor,
+    get_all_stocks_from_view,
+    get_stock_by_variant_ids,
+    create_stock,
 )
 
 router = APIRouter(tags=["Stock"], prefix="/stock")
@@ -33,7 +34,8 @@ def get_all_stock(
     db: Session = Depends(get_db),
 ):
     Authorize.jwt_required()
-    return {"data": get_stocks(db)}
+    stocks = get_all_stocks_from_view(db)
+    return {"data": [dict(stock._mapping) for stock in stocks]}
 
 
 @router.get("/variant-options")
@@ -76,6 +78,29 @@ def get_variant_color(
 ):
     Authorize.jwt_required()
     return {"data": get_all_stock_color(db)}
+
+
+@router.post("/")
+def post_new_stock(
+    data: CreateNewStockRequest,
+    Authorize: AuthJWT = Depends(),
+    db: Session = Depends(get_db),
+):
+    Authorize.jwt_required()
+
+    # Validate if the combination of type, color, and size exists
+    existing_stock = get_stock_by_variant_ids(
+        db, data.type_id, data.size_id, data.color_id
+    )
+    if existing_stock:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Stock with the given type, color, and size already exists.",
+        )
+
+    # Create the new stock
+    new_stock = create_stock(db, data.type_id, data.size_id, data.color_id)
+    return {"msg": "Stock created successfully", "data": {"stock_id": new_stock.id}}
 
 
 @router.post("/variant/size")

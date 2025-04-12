@@ -9,10 +9,10 @@ from database import (
     StockSize_TR,
     StockColor_TR,
     ProductMapping_TR,
-    InboundSchedule_TM,
 )
 
 from datetime import datetime
+from sqlalchemy import text
 
 
 # region PicklistTM
@@ -297,6 +297,16 @@ def create_stock(db: Session, type_id: int, size_id: int, color_id: int):
     db.refresh(new_stock)
 
     return new_stock
+
+
+def get_all_stocks_from_view(db: Session):
+    query = text(
+        """
+        SELECT * FROM stock_view
+        ORDER BY stock_type_id ASC, stock_color_id ASC, stock_size_id ASC
+    """
+    )
+    return db.execute(query).fetchall()
 
 
 # endregion
