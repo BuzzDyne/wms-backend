@@ -9,10 +9,10 @@ from database import (
     StockSize_TR,
     StockColor_TR,
     ProductMapping_TR,
-    # InboundSchedule_TM,
 )
 
 from datetime import datetime
+from sqlalchemy import text
 
 
 # region PicklistTM
@@ -299,6 +299,16 @@ def create_stock(db: Session, type_id: int, size_id: int, color_id: int):
     return new_stock
 
 
+def get_all_stocks_from_view(db: Session):
+    query = text(
+        """
+        SELECT * FROM stock_view
+        ORDER BY stock_type_id ASC, stock_color_id ASC, stock_size_id ASC
+    """
+    )
+    return db.execute(query).fetchall()
+
+
 # endregion
 
 
@@ -396,12 +406,38 @@ def create_product_mapping(db: Session, item: PicklistItem_TR, stock_id: int):
     return new_mapping
 
 
-# endregion
+def get_product_mappings_with_stock_details(db: Session):
+    return (
+        db.query(
+            ProductMapping_TR.id,
+            ProductMapping_TR.ecom_code,
+            ProductMapping_TR.field1,
+            ProductMapping_TR.field2,
+            ProductMapping_TR.field3,
+            ProductMapping_TR.field4,
+            ProductMapping_TR.field5,
+            ProductMapping_TR.stock_id,
+            StockType_TR.type_name.label("stock_type"),
+            StockColor_TR.color_name.label("stock_color"),
+            StockSize_TR.size_name.label("stock_size"),
+        )
+        .join(Stock_TM, ProductMapping_TR.stock_id == Stock_TM.id)
+        .join(StockType_TR, Stock_TM.stock_type_id == StockType_TR.id)
+        .join(StockSize_TR, Stock_TM.stock_size_id == StockSize_TR.id)
+        .join(StockColor_TR, Stock_TM.stock_color_id == StockColor_TR.id)
+        .all()
+    )
 
 
-# region InboundScheduleTM
-def get_all_inbound_schedules(db: Session):
-    return db.query(InboundSchedule_TM).all()
+def delete_product_mapping_by_id(db: Session, mapping_id: int) -> bool:
+    mapping = (
+        db.query(ProductMapping_TR).filter(ProductMapping_TR.id == mapping_id).first()
+    )
+    if not mapping:
+        return False
+    db.delete(mapping)
+    db.commit()
+    return True
 
 
 # endregion

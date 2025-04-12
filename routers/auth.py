@@ -14,7 +14,7 @@ from core.db_enums import UserTMStatus
 router = APIRouter(tags=["Auth"], prefix="/auth")
 
 ACCESS_TOKEN_EXP = timedelta(minutes=120)
-REFRESH_TOKEN_EXP = timedelta(days=7)
+REFRESH_TOKEN_EXP = timedelta(hours=9)
 
 
 @router.post(

@@ -61,6 +61,10 @@ class RegisterForm(BaseModel):
     rolename: str
 
 
+class ChangePasswordRequest(BaseModel):
+    new_password: str
+
+
 class RepeatItemMappingRequest(BaseModel):
     mapped_picklistitem_id: Optional[int]
 
@@ -90,4 +94,75 @@ class InboundSchedule(BaseModel):
     schedule_date: str
     created_dt: str
     creator_id: int
+    notes: Optional[str]  # Allow None
     is_active: int
+
+
+class CreateScheduleRequest(BaseModel):
+    schedule_date: str  # Format: YYYYMMDD
+    notes: str
+
+
+class ProductMappingResponse(BaseModel):
+    id: int
+    ecom_code: str
+    field1: str
+    field2: str
+    field3: str
+    field4: str
+    field5: str
+    stock_id: int
+    stock_type: str
+    stock_color: str
+    stock_size: str
+
+    class Config:
+        orm_mode = True
+
+
+class ProductMappingDetail(BaseModel):
+    mapping_id: int
+    ecom_code: str
+    field1: str
+    field2: Optional[str]  # Allow None
+    field3: Optional[str]  # Allow None
+    field4: Optional[str]  # Allow None
+    field5: Optional[str]  # Allow None
+
+
+class CategorizedProductMappingResponse(BaseModel):
+    stock_id: int
+    stock_type: str
+    stock_color: str
+    stock_size: str
+    mappings: List[ProductMappingDetail]
+
+    class Config:
+        orm_mode = True
+
+
+class CreateNewStockRequest(BaseModel):
+    type_id: int
+    size_id: int
+    color_id: int
+
+
+class StockQuantityUpdate(BaseModel):
+    stock_id: int
+    add_quantity: int
+
+
+class UpdateStockQuantityRequest(BaseModel):
+    stocks: List[StockQuantityUpdate]
+
+
+class CreateInboundRequest(BaseModel):
+    supplier_name: Optional[str]
+    notes: Optional[str]
+
+
+class AddInboundItemRequest(BaseModel):
+    color_id: int
+    size_id: int
+    type_id: int
+    add_quantity: int

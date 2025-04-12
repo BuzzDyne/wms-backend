@@ -348,7 +348,7 @@ def transform_color_name(color_name: str, color_hex: str) -> Optional[Tuple[str,
         return None
 
     # Validate color hex code
-    if not re.match(r"^[A-F0-9]{6}$", color_hex):
+    if not re.match(r"^[A-Fa-f0-9]{6}$", color_hex):
         return None
 
     return color_name, color_hex
