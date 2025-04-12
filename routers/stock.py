@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from fastapi_jwt_auth import AuthJWT
-from database import get_db
+from database import get_db, Stock_TM, StockType_TR, StockColor_TR, StockSize_TR
 from core.utils import transform_size_names, transform_type_name, transform_color_name
 from core.error_codes import ErrCode as E
 from schemas import (
@@ -9,6 +9,7 @@ from schemas import (
     CreateNewVariantSizeRequest,
     CreateNewVariantColorRequest,
     CreateNewStockRequest,
+    UpdateStockQuantityRequest,
 )
 from core.db_utils import (
     get_all_stock_size,
@@ -23,7 +24,9 @@ from core.db_utils import (
     get_all_stocks_from_view,
     get_stock_by_variant_ids,
     create_stock,
+    get_stock_by_stock_id,
 )
+from sqlalchemy import distinct
 
 router = APIRouter(tags=["Stock"], prefix="/stock")
 
@@ -198,3 +201,74 @@ def create_variant_color(
     db_color = create_stockcolor(db, name, hexa)
 
     return {"msg": "Create new color successful", "data": db_color}
+
+
+@router.post("/update-quantity")
+def update_stock_quantity(
+    data: UpdateStockQuantityRequest,
+    Authorize: AuthJWT = Depends(),
+    db: Session = Depends(get_db),
+):
+    Authorize.jwt_required()
+
+    for stock_update in data.stocks:
+        stock = get_stock_by_stock_id(db, stock_update.stock_id)
+        if not stock:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Stock with ID {stock_update.stock_id} not found.",
+            )
+        stock.quantity += stock_update.add_quantity
+        db.commit()
+
+    return {"msg": "Stock quantities updated successfully"}
+
+
+@router.get("/type-from-stock")
+def get_types_from_stock(
+    Authorize: AuthJWT = Depends(),
+    db: Session = Depends(get_db),
+):
+    # Authorize.jwt_required()
+    types = (
+        db.query(distinct(Stock_TM.stock_type_id), StockType_TR.type_name)
+        .join(StockType_TR, Stock_TM.stock_type_id == StockType_TR.id)
+        .order_by(Stock_TM.stock_type_id.asc())
+        .all()
+    )
+    return {"data": [{"type_id": t[0], "type_name": t[1]} for t in types]}
+
+
+@router.get("/color-from-stock")
+def get_colors_from_stock(
+    type_id: int,
+    Authorize: AuthJWT = Depends(),
+    db: Session = Depends(get_db),
+):
+    # Authorize.jwt_required()
+    colors = (
+        db.query(distinct(Stock_TM.stock_color_id), StockColor_TR.color_name)
+        .join(StockColor_TR, Stock_TM.stock_color_id == StockColor_TR.id)
+        .filter(Stock_TM.stock_type_id == type_id)
+        .order_by(Stock_TM.stock_color_id.asc())
+        .all()
+    )
+    return {"data": [{"color_id": c[0], "color_name": c[1]} for c in colors]}
+
+
+@router.get("/size-from-stock")
+def get_sizes_from_stock(
+    type_id: int,
+    color_id: int,
+    Authorize: AuthJWT = Depends(),
+    db: Session = Depends(get_db),
+):
+    # Authorize.jwt_required()
+    sizes = (
+        db.query(distinct(Stock_TM.stock_size_id), StockSize_TR.size_name)
+        .join(StockSize_TR, Stock_TM.stock_size_id == StockSize_TR.id)
+        .filter(Stock_TM.stock_type_id == type_id, Stock_TM.stock_color_id == color_id)
+        .order_by(Stock_TM.stock_size_id.asc())
+        .all()
+    )
+    return {"data": [{"size_id": s[0], "size_name": s[1]} for s in sizes]}

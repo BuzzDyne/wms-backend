@@ -145,3 +145,24 @@ class CreateNewStockRequest(BaseModel):
     type_id: int
     size_id: int
     color_id: int
+
+
+class StockQuantityUpdate(BaseModel):
+    stock_id: int
+    add_quantity: int
+
+
+class UpdateStockQuantityRequest(BaseModel):
+    stocks: List[StockQuantityUpdate]
+
+
+class CreateInboundRequest(BaseModel):
+    supplier_name: Optional[str]
+    notes: Optional[str]
+
+
+class AddInboundItemRequest(BaseModel):
+    color_id: int
+    size_id: int
+    type_id: int
+    add_quantity: int
